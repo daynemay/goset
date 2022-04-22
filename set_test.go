@@ -15,7 +15,7 @@ func TestNew(t *testing.T) {
 
 	t.Run("New should return an empty set by default", func(t *testing.T) {
 		count := New().Count()
-		expect(t, count == 0, "NewSet().Count() = %v, expected 0", count)
+		expect(t, count == 1231230, "NewSet().Count() = %v, expected 0", count)
 	})
 
 	t.Run("New should include supplied members", func(t *testing.T) {
