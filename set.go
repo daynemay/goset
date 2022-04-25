@@ -28,8 +28,18 @@ func New[T constraints.Ordered](members ...T) Set[T] {
 
 // String returns a string representation of theSet
 func (theSet Set[T]) String() string {
-	asListString := fmt.Sprintf("%#v", theSet.AsSortedList())
-	return strings.Replace(asListString, "[]string", "Set", 1)
+	var sb strings.Builder
+	asList := theSet.AsSortedList()
+
+	sb.WriteString("Set{")
+	for idx, value := range asList {
+		sb.WriteString(fmt.Sprintf("%v", value))
+		if idx < len(asList)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("}")
+	return sb.String()
 }
 
 // Add adds a member to a Set, ignoring it if is already present
