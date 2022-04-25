@@ -14,7 +14,7 @@ func expect(t *testing.T, condition bool, description string, subs ...interface{
 func TestNew(t *testing.T) {
 
 	t.Run("New should return an empty set by default", func(t *testing.T) {
-		count := New().Count()
+		count := New[string]().Count()
 		expect(t, count == 0, "NewSet().Count() = %v, expected 0", count)
 	})
 
@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 
 func TestSet_String(t *testing.T) {
 	t.Run("String() of an empty set", func(t *testing.T) {
-		actual := New().String()
+		actual := New[string]().String()
 		expected := "Set{}"
 		expect(t, actual == expected, "Expected empty set to String to %s, was %v", expected, actual)
 	})
@@ -57,14 +57,14 @@ func TestSet_String(t *testing.T) {
 
 func TestSet_Add(t *testing.T) {
 	t.Run("Adding a new member should result increase the size of the set", func(t *testing.T) {
-		set := New()
+		set := New[string]()
 		expect(t, set.Count() == 0, "Sanity check, expected to be empty")
 		set.Add("guile")
 		expect(t, set.Count() == 1, "Expect set to increase in size after Add()ing new member")
 	})
 
 	t.Run("Adding a new member should result in the presence of the member in the set", func(t *testing.T) {
-		set := New()
+		set := New[string]()
 		expect(t, !set.Contains("guile"), "Expect set not to contain new member initially")
 		set.Add("guile")
 		expect(t, set.Contains("guile"), "Expect set to contain new member after Add()ing new member")
@@ -92,13 +92,13 @@ func TestSet_Contains(t *testing.T) {
 	})
 
 	t.Run("Set.Contains() members Add()ed to it", func(t *testing.T) {
-		set := New()
+		set := New[string]()
 		set.Add("balrog", "guile")
 		expect(t, set.Contains("guile"), "Expected set to contain guile")
 	})
 
 	t.Run("Set.Contains() must contain all arguments", func(t *testing.T) {
-		set := New()
+		set := New[string]()
 		set.Add("balrog", "guile")
 		expect(t, !set.Contains("guile", "honda"), "Expected set not to contain guile-and-honda")
 	})
@@ -106,7 +106,7 @@ func TestSet_Contains(t *testing.T) {
 
 func TestStringSeq_Equals(t *testing.T) {
 	t.Run("Two empty sets should be equal", func(t *testing.T) {
-		expect(t, New().Equals(New()), "Expect two empty sets to be equal")
+		expect(t, New[string]().Equals(New[string]()), "Expect two empty sets to be equal")
 	})
 
 	t.Run("Two sets with the same members should be Equal()", func(t *testing.T) {
@@ -167,13 +167,13 @@ func TestSet_Union(t *testing.T) {
 
 func TestSet_Minus(t *testing.T) {
 	t.Run("Empty set minus empty set should be empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		difference := empty.Minus(empty)
 		expect(t, difference.Equals(empty), "Empty set minus empty set should be empty set")
 	})
 
 	t.Run("Empty set minus non-empty set should be empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		nonEmpty := New("dhalsim", "honda", "vega")
 		difference := empty.Minus(nonEmpty)
 		expect(t, difference.Equals(empty), "Empty set minus non-empty set should be empty set")
@@ -181,7 +181,7 @@ func TestSet_Minus(t *testing.T) {
 
 	t.Run("Non-empty minus empty set should be equal to the original set", func(t *testing.T) {
 		nonEmpty := New("dhalsim", "honda", "vega")
-		empty := New()
+		empty := New[string]()
 		difference := nonEmpty.Minus(empty)
 		expect(t, difference.Equals(nonEmpty), "Original set minus empty should be equal to original set")
 	})
@@ -197,7 +197,7 @@ func TestSet_Minus(t *testing.T) {
 
 func TestSet_Clone(t *testing.T) {
 	t.Run("Clone of empty set should be empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		clone := empty.Clone()
 		expect(t, clone.Count() == 0, "Clone of empty set should be of size zero")
 	})
@@ -210,7 +210,7 @@ func TestSet_Clone(t *testing.T) {
 	})
 
 	t.Run("Mutation of clone should not affect original", func(t *testing.T) {
-		original := New()
+		original := New[string]()
 		clone := original.Clone()
 		clone.Add("deejay")
 		expect(t, clone.Contains("deejay"), "Clone should contain new member")
@@ -218,7 +218,7 @@ func TestSet_Clone(t *testing.T) {
 	})
 
 	t.Run("Mutation of original should not affect clone", func(t *testing.T) {
-		original := New()
+		original := New[string]()
 		clone := original.Clone()
 		original.Add("cammy")
 		expect(t, original.Contains("cammy"), "Original should contain new member")
@@ -228,13 +228,13 @@ func TestSet_Clone(t *testing.T) {
 
 func TestSet_IsSubsetOf(t *testing.T) {
 	t.Run("Empty set is a subset of empty set", func(t *testing.T) {
-		empty := New()
-		otherEmpty := New()
+		empty := New[string]()
+		otherEmpty := New[string]()
 		expect(t, empty.IsSubsetOf(otherEmpty), "Empty set should be a subset of empty set")
 	})
 
 	t.Run("Empty set is a subset of a non-empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		nonEmpty := New("dhalsim", "honda", "vega")
 		expect(t, empty.IsSubsetOf(nonEmpty), "Empty set should be a subset of non-empty set")
 	})
@@ -262,13 +262,13 @@ func TestSet_IsSubsetOf(t *testing.T) {
 
 func TestSet_IsProperSubsetOf(t *testing.T) {
 	t.Run("Empty set is not a proper subset of empty set", func(t *testing.T) {
-		empty := New()
-		otherEmpty := New()
+		empty := New[string]()
+		otherEmpty := New[string]()
 		expect(t, !empty.IsProperSubsetOf(otherEmpty), "Empty set is not a proper subset of empty set")
 	})
 
 	t.Run("Empty set is a proper subset of a non-empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		nonEmpty := New("dhalsim", "honda", "vega")
 		expect(t, empty.IsProperSubsetOf(nonEmpty), "Empty set is a proper subset of a non-empty set")
 	})
@@ -296,13 +296,13 @@ func TestSet_IsProperSubsetOf(t *testing.T) {
 
 func TestSet_IsSupersetOf(t *testing.T) {
 	t.Run("Empty set is a superset of empty set", func(t *testing.T) {
-		empty := New()
-		otherEmpty := New()
+		empty := New[string]()
+		otherEmpty := New[string]()
 		expect(t, empty.IsSupersetOf(otherEmpty), "Empty set should be a superset of empty set")
 	})
 
 	t.Run("Non-empty is a superset of empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		nonEmpty := New("dhalsim", "honda", "vega")
 		expect(t, nonEmpty.IsSupersetOf(empty), "Non-empty should be a superset of empty set")
 	})
@@ -330,13 +330,13 @@ func TestSet_IsSupersetOf(t *testing.T) {
 
 func TestSet_IsProperSupersetOf(t *testing.T) {
 	t.Run("Empty set is not a proper superset of empty set", func(t *testing.T) {
-		empty := New()
-		otherEmpty := New()
+		empty := New[string]()
+		otherEmpty := New[string]()
 		expect(t, !empty.IsProperSupersetOf(otherEmpty), "Empty set is not a proper superset of empty set")
 	})
 
 	t.Run("Non-empty set is a proper superset of empty set", func(t *testing.T) {
-		empty := New()
+		empty := New[string]()
 		nonEmpty := New("dhalsim", "honda", "vega")
 		expect(t, nonEmpty.IsProperSupersetOf(empty), "Non-empty set is a proper superset of empty set")
 	})
