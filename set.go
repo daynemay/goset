@@ -31,7 +31,7 @@ func (theSet Set[T]) String() string {
 	var sb strings.Builder
 	asList := theSet.AsSortedList()
 
-	sb.WriteString("Set{")
+	sb.WriteString(fmt.Sprintf("%T{", theSet))
 	for idx, value := range asList {
 		sb.WriteString(fmt.Sprintf("%v", value))
 		if idx < len(asList)-1 {

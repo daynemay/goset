@@ -37,20 +37,20 @@ func TestNew(t *testing.T) {
 func TestSet_String(t *testing.T) {
 	t.Run("String() of an empty set", func(t *testing.T) {
 		actual := New[string]().String()
-		expected := "Set{}"
+		expected := "goset.Set[string]{}"
 		expect(t, actual == expected, "Expected empty set to String to %s, was %v", expected, actual)
 	})
 
 	t.Run("String() shows ordered members", func(t *testing.T) {
 		actual := New("ryu", "ken", "balrog", "cammy").String()
-		expected := "Set{balrog, cammy, ken, ryu}"
+		expected := "goset.Set[string]{balrog, cammy, ken, ryu}"
 		expect(t, actual == expected, "Expected String results to be ordered (%s), got %s", expected, actual)
 	})
 
 	t.Run("String() works like a String()", func(t *testing.T) {
 		set := New("balrog", "cammy", "ken", "ryu")
 		actual := fmt.Sprintf("%v", set)
-		expected := "Set{balrog, cammy, ken, ryu}"
+		expected := "goset.Set[string]{balrog, cammy, ken, ryu}"
 		expect(t, actual == expected, "Expected String() to be used for fmt.Sprintf: expected %s, was %v", expected, actual)
 	})
 }
