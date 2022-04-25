@@ -32,6 +32,13 @@ func TestNew(t *testing.T) {
 		expected := 2
 		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
 	})
+
+	t.Run("New can create a Set[int]", func(t *testing.T) {
+		set := New(1, 2, 3, 4)
+		count := set.Count()
+		expected := 4
+		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+	})
 }
 
 func TestSet_String(t *testing.T) {
@@ -45,6 +52,12 @@ func TestSet_String(t *testing.T) {
 		actual := New("ryu", "ken", "balrog", "cammy").String()
 		expected := "goset.Set[string]{balrog, cammy, ken, ryu}"
 		expect(t, actual == expected, "Expected String results to be ordered (%s), got %s", expected, actual)
+	})
+
+	t.Run("String() reflects the type of members", func(t *testing.T) {
+		actual := New(1, 2, 3, 4).String()
+		expected := "goset.Set[int]{1, 2, 3, 4}"
+		expect(t, actual == expected, "Expected String results to be show the data type (%s), got %s", expected, actual)
 	})
 
 	t.Run("String() works like a String()", func(t *testing.T) {

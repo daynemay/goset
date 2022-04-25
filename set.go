@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"golang.org/x/exp/constraints"
+	"golang.org/x/exp/maps"
 )
 
 var exists = struct{}{}
@@ -76,11 +77,7 @@ func (theSet Set[T]) Equals(other Set[T]) bool {
 
 // AsList returns a slice of values in theSet
 func (theSet Set[T]) AsList() []T {
-	asList := []T{}
-	for entry := range theSet.members {
-		asList = append(asList, entry)
-	}
-	return asList
+	return maps.Keys(theSet.members)
 }
 
 // AsSortedList returns a sorted slice of values in theSet
