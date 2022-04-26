@@ -2,6 +2,7 @@ package goset
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
@@ -9,19 +10,37 @@ import (
 
 var exists = struct{}{}
 
+// A comparator returns true when a < b.
+type Comparator func(a, b interface{}) bool
+
 // Set represents a (mathematical) set of values, supporting the set concepts of Union, Intersection, Difference
 type Set[T comparable] struct {
-	members map[T]struct{}
+	members    map[T]struct{}
+	comparator Comparator
 }
 
 // New returns a new Set, optionally initialized with some members
 func New[T comparable](members ...T) Set[T] {
 	newSet := Set[T]{
-		members: map[T]struct{}{},
+		members:    map[T]struct{}{},
+		comparator: nil,
 	}
 	for _, entry := range members {
 		newSet.members[entry] = exists
 	}
+
+	return newSet
+}
+
+func NewWithComparator[T comparable](cmp Comparator, members ...T) Set[T] {
+	newSet := Set[T]{
+		members:    map[T]struct{}{},
+		comparator: cmp,
+	}
+	for _, entry := range members {
+		newSet.members[entry] = exists
+	}
+
 	return newSet
 }
 
@@ -80,7 +99,16 @@ func (theSet Set[T]) AsList() []T {
 
 // AsSortedList returns a slice of values in theSet in a stable sorted order.
 func (theSet Set[T]) AsSortedList() []T {
-	return sortComparable(theSet.AsList())
+	if theSet.comparator != nil {
+		asList := theSet.AsList()
+		isLess := func(i, j int) bool {
+			return theSet.comparator(asList[i], asList[j])
+		}
+		sort.SliceStable(asList, isLess)
+		return asList
+	} else {
+		return sortComparable(theSet.AsList())
+	}
 }
 
 // Intersect returns a new Set resulting from the set intersection of theSet and other

@@ -12,6 +12,22 @@ func expect(t *testing.T, condition bool, description string, subs ...interface{
 	}
 }
 
+type Person struct {
+	name string
+	age  int
+}
+
+// A Comparator (see set.go) to order a collection of Person by age.
+func byPersonAge(a, b interface{}) bool {
+	p1, ok1 := a.(Person)
+	p2, ok2 := b.(Person)
+	if ok1 && ok2 {
+		return p1.age < p2.age
+	} else {
+		return false
+	}
+}
+
 func TestNew(t *testing.T) {
 
 	t.Run("New should return an empty set by default", func(t *testing.T) {
@@ -39,6 +55,27 @@ func TestNew(t *testing.T) {
 		count := set.Count()
 		expected := 4
 		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+	})
+
+	t.Run("Try with (simple) composite type Person", func(t *testing.T) {
+		people := []Person{
+			{"Jeff", 58}, {"Rick", 55}, {"Kim", 3},
+			{"Lara", 52}, {"Chris", 47}, {"Greg", 45},
+		}
+		set := NewWithComparator(byPersonAge, people...)
+		count := set.Count()
+		expected := len(people)
+		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+		sl := set.AsSortedList()
+		expect(t, count == expected, "SortedList Count() = %v, expected %v", len(sl), expected)
+		listName := sl[0].name
+		expectedName := "Kim"
+		expect(t, listName == expectedName, "First name in sorted list = %v, expected %v",
+			listName, expectedName)
+		listName = sl[len(sl)-1].name
+		expectedName = "Jeff"
+		expect(t, listName == expectedName, "Last name in sorted list = %v, expected %v",
+			listName, expectedName)
 	})
 }
 
