@@ -2,6 +2,7 @@ package goset
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
@@ -9,7 +10,8 @@ import (
 
 var exists = struct{}{}
 
-type Comparator func(a, b interface{}) int
+// A comparator returns true when a < b.
+type Comparator func(a, b interface{}) bool
 
 // Set represents a (mathematical) set of values, supporting the set concepts of Union, Intersection, Difference
 type Set[T comparable] struct {
@@ -30,10 +32,10 @@ func New[T comparable](members ...T) Set[T] {
 	return newSet
 }
 
-func NewWithComparator[T comparable](c Comparator, members ...T) Set[T] {
+func NewWithComparator[T comparable](cmp Comparator, members ...T) Set[T] {
 	newSet := Set[T]{
 		members:    map[T]struct{}{},
-		comparator: c,
+		comparator: cmp,
 	}
 	for _, entry := range members {
 		newSet.members[entry] = exists
@@ -97,7 +99,16 @@ func (theSet Set[T]) AsList() []T {
 
 // AsSortedList returns a slice of values in theSet in a stable sorted order.
 func (theSet Set[T]) AsSortedList() []T {
-	return sortComparable(theSet.AsList())
+	if theSet.comparator != nil {
+		asList := theSet.AsList()
+		isLess := func(i, j int) bool {
+			return theSet.comparator(asList[i], asList[j])
+		}
+		sort.SliceStable(asList, isLess)
+		return asList
+	} else {
+		return sortComparable(theSet.AsList())
+	}
 }
 
 /*
