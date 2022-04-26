@@ -2,6 +2,7 @@ package goset
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -68,6 +69,50 @@ func TestSet_String(t *testing.T) {
 	})
 }
 
+func TestSet_AsSortedList(t *testing.T) {
+	t.Run("Set[string].AsSortedList will return a sorted []string]", func(t *testing.T) {
+		set := New("cammy", "ken", "ryu", "balrog")
+		actual := set.AsSortedList()
+		expected := []string{"balrog", "cammy", "ken", "ryu"}
+		expect(t, reflect.DeepEqual(actual, expected), "Expected %v, got %v", expected, actual)
+	})
+
+	t.Run("Set[int].AsSortedList will return a sorted []int", func(t *testing.T) {
+		set := New(44, -12, 3, -5, 0)
+		actual := set.AsSortedList()
+		expected := []int{-12, -5, 0, 3, 44}
+		expect(t, reflect.DeepEqual(actual, expected), "Expected %v, got %v", expected, actual)
+	})
+
+	t.Run("Set[float].AsSortedList will return a sorted []int", func(t *testing.T) {
+		set := New(44.44, -12.12, 3.3, -5.5, 0.0)
+		actual := set.AsSortedList()
+		expected := []float64{-12.12, -5.5, 0.0, 3.3, 44.44}
+		expect(t, reflect.DeepEqual(actual, expected), "Expected %v, got %v", expected, actual)
+	})
+
+	t.Run("Set[bool].AsSortedList will return a sorted []bool", func(t *testing.T) {
+		set := New(true, false)
+		actual := set.AsSortedList()
+		expected := []bool{false, true}
+		expect(t, reflect.DeepEqual(actual, expected), "Expected %v, got %v", expected, actual)
+	})
+
+	t.Run("Set[struct{...}].AsSortedList will return a sorted []struct{...}", func(t *testing.T) {
+		type fighter struct {
+			name string
+		}
+		balrog := fighter{"balrog"}
+		cammy := fighter{"cammy"}
+		ken := fighter{"ken"}
+		ryu := fighter{"ryu"}
+		set := New(ken, ryu, cammy, balrog)
+		actual := set.AsSortedList()
+		expected := []fighter{balrog, cammy, ken, ryu}
+		expect(t, reflect.DeepEqual(actual, expected), "Expected %v, got %v", expected, actual)
+	})
+}
+
 func TestSet_Add(t *testing.T) {
 	t.Run("Adding a new member should result increase the size of the set", func(t *testing.T) {
 		set := New[string]()
@@ -117,7 +162,7 @@ func TestSet_Contains(t *testing.T) {
 	})
 }
 
-func TestStringSeq_Equals(t *testing.T) {
+func TestSet_Equals(t *testing.T) {
 	t.Run("Two empty sets should be equal", func(t *testing.T) {
 		expect(t, New[string]().Equals(New[string]()), "Expect two empty sets to be equal")
 	})

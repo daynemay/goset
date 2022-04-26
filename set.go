@@ -2,22 +2,20 @@ package goset
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
-	"golang.org/x/exp/constraints"
 	"golang.org/x/exp/maps"
 )
 
 var exists = struct{}{}
 
 // Set represents a (mathematical) set of values, supporting the set concepts of Union, Intersection, Difference
-type Set[T constraints.Ordered] struct {
+type Set[T comparable] struct {
 	members map[T]struct{}
 }
 
 // New returns a new Set, optionally initialized with some members
-func New[T constraints.Ordered](members ...T) Set[T] {
+func New[T comparable](members ...T) Set[T] {
 	newSet := Set[T]{
 		members: map[T]struct{}{},
 	}
@@ -30,12 +28,12 @@ func New[T constraints.Ordered](members ...T) Set[T] {
 // String returns a string representation of theSet
 func (theSet Set[T]) String() string {
 	var sb strings.Builder
-	asList := theSet.AsSortedList()
+	members := theSet.AsSortedList()
 
 	sb.WriteString(fmt.Sprintf("%T{", theSet))
-	for idx, value := range asList {
+	for idx, value := range members {
 		sb.WriteString(fmt.Sprintf("%v", value))
-		if idx < len(asList)-1 {
+		if idx < len(members)-1 {
 			sb.WriteString(", ")
 		}
 	}
@@ -80,14 +78,9 @@ func (theSet Set[T]) AsList() []T {
 	return maps.Keys(theSet.members)
 }
 
-// AsSortedList returns a sorted slice of values in theSet
+// AsSortedList returns a slice of values in theSet in a stable sorted order.
 func (theSet Set[T]) AsSortedList() []T {
-	asList := theSet.AsList()
-	isLess := func(i, j int) bool {
-		return asList[i] < asList[j]
-	}
-	sort.SliceStable(asList, isLess)
-	return asList
+	return sortComparable(theSet.AsList())
 }
 
 // Intersect returns a new Set resulting from the set intersection of theSet and other
