@@ -9,19 +9,36 @@ import (
 
 var exists = struct{}{}
 
+type Comparator func(a, b interface{}) int
+
 // Set represents a (mathematical) set of values, supporting the set concepts of Union, Intersection, Difference
 type Set[T comparable] struct {
-	members map[T]struct{}
+	members    map[T]struct{}
+	comparator Comparator
 }
 
 // New returns a new Set, optionally initialized with some members
 func New[T comparable](members ...T) Set[T] {
 	newSet := Set[T]{
-		members: map[T]struct{}{},
+		members:    map[T]struct{}{},
+		comparator: nil,
 	}
 	for _, entry := range members {
 		newSet.members[entry] = exists
 	}
+
+	return newSet
+}
+
+func NewWithComparator[T comparable](c Comparator, members ...T) Set[T] {
+	newSet := Set[T]{
+		members:    map[T]struct{}{},
+		comparator: c,
+	}
+	for _, entry := range members {
+		newSet.members[entry] = exists
+	}
+
 	return newSet
 }
 
@@ -82,6 +99,80 @@ func (theSet Set[T]) AsList() []T {
 func (theSet Set[T]) AsSortedList() []T {
 	return sortComparable(theSet.AsList())
 }
+
+/*
+func (theSet Set[T]) AsSortedList() []T {
+	asList := theSet.AsList()
+	var isLess func(i, j int) bool
+
+	if theSet.comparator != nil {
+		isLess = func(i, j int) bool {
+			return theSet.comparator(asList[i], asList[j]) < 0
+		}
+	} else {
+		isLess = func(i, j int) bool {
+			const bitSize = 64
+
+			si := fmt.Sprintf("%#v", asList[i])
+			sj := fmt.Sprintf("%#v", asList[j])
+			fi, erri := strconv.ParseFloat(si, bitSize)
+			fj, errj := strconv.ParseFloat(sj, bitSize)
+			if erri == nil && errj == nil {
+				return fi < fj
+			} else {
+				return si < sj
+			}
+		}
+		/*
+			isLess = func(i, j int) bool {
+				ifi := ((interface{})(asList[i]))
+				ifj := ((interface{})(asList[j]))
+
+				switch ti := ifi.(type) {
+				case string:
+					si, oki := (ifi).(string)
+					sj, okj := (ifj).(string)
+					if oki && okj {
+						return si < sj
+					}
+					break
+
+				default:
+					break
+				}
+				return true
+	}
+	sort.SliceStable(asList, isLess)
+	return asList
+}
+
+// AsSortedList returns a sorted slice of values in theSet
+/*
+func (theSet Set[T]) AsSortedList(sif sort.Interface) []T {
+	asList := theSet.AsList()
+
+	if sif != nil {
+		sort.SliceStable(asList, sif.Less)
+		return asList
+	}
+
+	isLess := func(i, j int) bool {
+		const bitSize = 64
+
+		si := fmt.Sprintf("%#v", asList[i])
+		sj := fmt.Sprintf("%#v", asList[j])
+		fi, erri := strconv.ParseFloat(si, bitSize)
+		fj, errj := strconv.ParseFloat(sj, bitSize)
+		if erri == nil && errj == nil {
+			return fi < fj
+		} else {
+			return si < sj
+		}
+	}
+	sort.SliceStable(asList, isLess)
+	return asList
+}
+*/
 
 // Intersect returns a new Set resulting from the set intersection of theSet and other
 func (theSet Set[T]) Intersect(other Set[T]) Set[T] {

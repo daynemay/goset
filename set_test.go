@@ -12,6 +12,32 @@ func expect(t *testing.T, condition bool, description string, subs ...interface{
 	}
 }
 
+type Person struct {
+	name string
+	age  int
+}
+
+func byPersonAge(a, b interface{}) int {
+	// Type assertions, program will panic if they're not respected.
+	p1 := a.(Person)
+	p2 := b.(Person)
+
+	return p1.age - p2.age
+}
+
+func byStringComparator(a, b interface{}) int {
+	s1 := a.(string)
+	s2 := b.(string)
+
+	if s1 < s2 {
+		return -1
+	} else if s1 > s2 {
+		return 1
+	} else {
+		return 0
+	}
+}
+
 func TestNew(t *testing.T) {
 
 	t.Run("New should return an empty set by default", func(t *testing.T) {
@@ -40,6 +66,17 @@ func TestNew(t *testing.T) {
 		expected := 4
 		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
 	})
+	/*
+		t.Run("Try with composite type", func(t *testing.T) {
+			set := NewWithComparator(byPersonAge, Person{"Jeff", 58}, Person{"Rick", 55})
+			count := set.Count()
+			expected := 2
+			expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+			sl := set.AsSortedList()
+			expect(t, count == expected, "SortedList Count() = %v, expected %v", len(sl), expected)
+			expect(t, sl[0].name == "Rick", "First name is Rick")
+		})
+	*/
 }
 
 func TestSet_String(t *testing.T) {
@@ -67,6 +104,20 @@ func TestSet_String(t *testing.T) {
 		expected := "goset.Set[string]{balrog, cammy, ken, ryu}"
 		expect(t, actual == expected, "Expected String() to be used for fmt.Sprintf: expected %s, was %v", expected, actual)
 	})
+	/*
+		t.Run("StringOrdered() shows ordered members", func(t *testing.T) {
+			actual := NewWithComparator(byStringComparator, "ryu", "ken", "balrog", "cammy").StringOrdered()
+			expected := `Set{"balrog", "cammy", "ken", "ryu"}`
+			expect(t, actual == expected, "Expected String results to be ordered (%s), got %s", expected, actual)
+		})
+
+			t.Run("String() works like a String()", func(t *testing.T) {
+				set := New("balrog", "cammy", "ken", "ryu")
+				actual := fmt.Sprintf("%v", set)
+				expected := `Set{"balrog", "cammy", "ken", "ryu"}`
+				expect(t, actual == expected, "Expected String() to be used for fmt.Sprintf: expected %s, was %v", expected, actual)
+			})
+	*/
 }
 
 func TestSet_AsSortedList(t *testing.T) {
