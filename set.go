@@ -11,12 +11,12 @@ import (
 var exists = struct{}{}
 
 // A comparator returns true when a < b.
-type Comparator func(a, b interface{}) bool
+type Comparator[T comparable] func(a, b T) bool
 
 // Set represents a (mathematical) set of values, supporting the set concepts of Union, Intersection, Difference
 type Set[T comparable] struct {
 	members    map[T]struct{}
-	comparator Comparator
+	comparator Comparator[T]
 }
 
 // New returns a new Set, optionally initialized with some members
@@ -32,7 +32,8 @@ func New[T comparable](members ...T) Set[T] {
 	return newSet
 }
 
-func NewWithComparator[T comparable](cmp Comparator, members ...T) Set[T] {
+// NewWithComparator return a new Set and accepts a Comparator defining a sort function for members
+func NewWithComparator[T comparable](cmp Comparator[T], members ...T) Set[T] {
 	newSet := Set[T]{
 		members:    map[T]struct{}{},
 		comparator: cmp,
