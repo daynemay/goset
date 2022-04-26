@@ -12,34 +12,42 @@ func expect(t *testing.T, condition bool, description string, subs ...interface{
 	}
 }
 
-type Person struct {
+var jeff = person{"Jeff", 58}
+var rick = person{"Rick", 55}
+var kim = person{"Kim", 3}
+var lara = person{"Lara", 52}
+var chris = person{"Chris", 47}
+var greg = person{"Greg", 45}
+
+var people = []person{jeff, rick, kim, lara, chris, greg}
+
+type person struct {
 	name string
 	age  int
 }
 
 // A Comparator (see set.go) to order a collection of Person by age.
-func byPersonAge(a, b interface{}) bool {
-	p1, ok1 := a.(Person)
-	p2, ok2 := b.(Person)
-	if ok1 && ok2 {
-		return p1.age < p2.age
-	} else {
-		return false
-	}
+func byPersonAge(a, b person) bool {
+	return a.age < b.age
+}
+
+// A Comparator (see set.go) to order a collection of Person by name.
+func byPersonName(a, b person) bool {
+	return a.name < b.name
 }
 
 func TestNew(t *testing.T) {
 
 	t.Run("New should return an empty set by default", func(t *testing.T) {
 		count := New[string]().Count()
-		expect(t, count == 0, "NewSet().Count() = %v, expected 0", count)
+		expect(t, count == 0, "New().Count() = %v, expected 0", count)
 	})
 
 	t.Run("New should include supplied members", func(t *testing.T) {
 		set := New("balrog", "blanka", "cammy", "guile")
 		count := set.Count()
 		expected := 4
-		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+		expect(t, count == expected, "New(...).Count() = %v, expected %v", count, expected)
 
 	})
 
@@ -47,35 +55,52 @@ func TestNew(t *testing.T) {
 		set := New("balrog", "balrog", "cammy", "balrog")
 		count := set.Count()
 		expected := 2
-		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+		expect(t, count == expected, "New(...).Count() = %v, expected %v", count, expected)
 	})
 
 	t.Run("New can create a Set[int]", func(t *testing.T) {
 		set := New(1, 2, 3, 4)
 		count := set.Count()
 		expected := 4
-		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
+		expect(t, count == expected, "New(...).Count() = %v, expected %v", count, expected)
 	})
 
-	t.Run("Try with (simple) composite type Person", func(t *testing.T) {
-		people := []Person{
-			{"Jeff", 58}, {"Rick", 55}, {"Kim", 3},
-			{"Lara", 52}, {"Chris", 47}, {"Greg", 45},
-		}
+	t.Run("New can create a Set[Person], i.e. Set[struct{...}] ", func(t *testing.T) {
+		set := New(1, 2, 3, 4)
+		count := set.Count()
+		expected := 4
+		expect(t, count == expected, "New(...).Count() = %v, expected %v", count, expected)
+	})
+}
+
+func TestNewWithComparator(t *testing.T) {
+
+	t.Run("NewWithComparator will accept a nil comparator", func(t *testing.T) {
+		set := NewWithComparator[person](nil)
+		count := set.Count()
+		expected := 0
+		expect(t, count == expected, "NewWithComparator(nil).Count() = %v, expected %v", count, expected)
+	})
+
+	t.Run("NewWithComparator will accept a comparator function", func(t *testing.T) {
+		set := NewWithComparator(byPersonAge)
+		count := set.Count()
+		expected := 0
+		expect(t, count == 0, "NewWithComparator(...).Count() = %v, expected %v", count, expected)
+	})
+
+	t.Run("NewWithComparator will accept a comparator function", func(t *testing.T) {
+		set := NewWithComparator(byPersonAge)
+		count := set.Count()
+		expected := 0
+		expect(t, count == expected, "NewWithComparator(...).Count() = %v, expected %v", count, expected)
+	})
+
+	t.Run("NewWithComparator can be initialized with members", func(t *testing.T) {
 		set := NewWithComparator(byPersonAge, people...)
 		count := set.Count()
 		expected := len(people)
-		expect(t, count == expected, "NewSet(...).Count() = %v, expected %v", count, expected)
-		sl := set.AsSortedList()
-		expect(t, count == expected, "SortedList Count() = %v, expected %v", len(sl), expected)
-		listName := sl[0].name
-		expectedName := "Kim"
-		expect(t, listName == expectedName, "First name in sorted list = %v, expected %v",
-			listName, expectedName)
-		listName = sl[len(sl)-1].name
-		expectedName = "Jeff"
-		expect(t, listName == expectedName, "Last name in sorted list = %v, expected %v",
-			listName, expectedName)
+		expect(t, count == expected, "NewWithComparator(...).Count() = %v, expected %v", count, expected)
 	})
 }
 
@@ -104,9 +129,23 @@ func TestSet_String(t *testing.T) {
 		expected := "goset.Set[string]{balrog, cammy, ken, ryu}"
 		expect(t, actual == expected, "Expected String() to be used for fmt.Sprintf: expected %s, was %v", expected, actual)
 	})
+
+	t.Run("String() will respect a custom comparator", func(t *testing.T) {
+		peopleByAge := NewWithComparator(byPersonAge, people...)
+		actual := peopleByAge.String()
+		expected := "goset.Set[goset.person]{{Kim 3}, {Greg 45}, {Chris 47}, {Lara 52}, {Rick 55}, {Jeff 58}}"
+		expect(t, actual == expected, "Expected peopleByAge = '%s', got '%s'", expected, actual)
+	})
+
+	t.Run("String() of two sets with identical members but different comparators may differ", func(t *testing.T) {
+		peopleByName := NewWithComparator(byPersonName, people...)
+		peopleByAge := NewWithComparator(byPersonAge, people...)
+		expect(t, peopleByAge.String() != peopleByName.String(), "Expected String results to differ for different comparators")
+	})
+
 }
 
-func TestSet_AsSortedList(t *testing.T) {
+func TestSet_AsSortedList_with_default_comparator(t *testing.T) {
 	t.Run("Set[string].AsSortedList will return a sorted []string]", func(t *testing.T) {
 		set := New("cammy", "ken", "ryu", "balrog")
 		actual := set.AsSortedList()
@@ -147,6 +186,23 @@ func TestSet_AsSortedList(t *testing.T) {
 		actual := set.AsSortedList()
 		expected := []fighter{balrog, cammy, ken, ryu}
 		expect(t, reflect.DeepEqual(actual, expected), "Expected %v, got %v", expected, actual)
+	})
+}
+
+func TestSet_AsSortedList_with_custom_comparator(t *testing.T) {
+
+	t.Run("AsSortedList will respect a supplied comparator", func(t *testing.T) {
+		set := NewWithComparator(byPersonName, people...)
+		sorted := set.AsSortedList()
+		expected := []person{chris, greg, jeff, kim, lara, rick}
+		expect(t, reflect.DeepEqual(sorted, expected), "Set byPersonName = %v, expected %v", sorted, expected)
+	})
+
+	t.Run("AsSortedList will respect another comparator", func(t *testing.T) {
+		set := NewWithComparator(byPersonAge, people...)
+		sorted := set.AsSortedList()
+		expected := []person{kim, greg, chris, lara, rick, jeff}
+		expect(t, reflect.DeepEqual(sorted, expected), "Set byPersonName = %v, expected %v", sorted, expected)
 	})
 }
 
